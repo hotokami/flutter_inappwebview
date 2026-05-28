@@ -811,10 +811,17 @@ public class InAppWebViewClientCompat extends WebViewClientCompat {
   public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
     final InAppWebView webView = (InAppWebView) view;
 
-    if (webView.customSettings.useOnRenderProcessGone && webView.channelDelegate != null) {
-      boolean didCrash = detail.didCrash();
-      int rendererPriorityAtExit = detail.rendererPriorityAtExit();
-      webView.channelDelegate.onRenderProcessGone(didCrash, rendererPriorityAtExit);
+    // [hotokami patch] channelDelegate==null (dispose 進行中: dispose() が真っ先に
+    // channelDelegate を null 化する) でも、useOnRenderProcessGone を有効にした WebView は
+    // render-gone を「処理済み(true)」として返し、アプリ巻き込みの FATAL
+    // "Render process crash wasn't handled by all associated webviews" を防ぐ。
+    // channelDelegate が生きている時のみ Dart へ通知する。
+    if (webView.customSettings != null && webView.customSettings.useOnRenderProcessGone) {
+      if (webView.channelDelegate != null) {
+        boolean didCrash = detail.didCrash();
+        int rendererPriorityAtExit = detail.rendererPriorityAtExit();
+        webView.channelDelegate.onRenderProcessGone(didCrash, rendererPriorityAtExit);
+      }
       return true;
     }
 

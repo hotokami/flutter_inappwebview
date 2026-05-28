@@ -47,6 +47,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
 import android.webkit.WebHistoryItem;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
@@ -2043,6 +2044,18 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     setWebViewClient(new WebViewClient() {
       public void onPageFinished(WebView view, String url) {
         destroy();
+      }
+
+      // [hotokami patch] dispose() は destroy() を about:blank の onPageFinished まで
+      // 遅延させるが、その間にレンダラが死ぬと about:blank が完了せず destroy() が
+      // 呼ばれないまま、この vanilla WebViewClient が render-gone を未処理(false)で
+      // 返し "Render process crash wasn't handled by all associated webviews" の
+      // FATAL を引き起こす (Android 16 でレンダラ積極回収により多発)。
+      // この WebView は破棄予定なので true を返してアプリ巻き込みクラッシュを防ぐ。
+      @RequiresApi(api = Build.VERSION_CODES.O)
+      @Override
+      public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        return true;
       }
     });
     interceptOnlyAsyncAjaxRequestsPluginScript = null;
