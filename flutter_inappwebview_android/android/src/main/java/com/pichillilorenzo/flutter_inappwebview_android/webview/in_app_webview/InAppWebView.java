@@ -282,9 +282,16 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     settings.setDisplayZoomControls(customSettings.displayZoomControls);
     settings.setSupportMultipleWindows(customSettings.supportMultipleWindows);
 
-    if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE))
-      WebSettingsCompat.setSafeBrowsingEnabled(settings, customSettings.safeBrowsingEnabled);
-    else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)) {
+      try {
+        WebSettingsCompat.setSafeBrowsingEnabled(settings, customSettings.safeBrowsingEnabled);
+      } catch (Throwable e) {
+        // best-effort setting: some outdated System WebView builds throw
+        // ClassCastException ("WebSettingsWrapper cannot be cast to ContentSettingsAdapter")
+        // on WebSettingsCompat.* calls. Log and continue instead of crashing prepare().
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setSafeBrowsingEnabled", e);
+      }
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
       settings.setSafeBrowsingEnabled(customSettings.safeBrowsingEnabled);
 
     settings.setMediaPlaybackRequiresUserGesture(customSettings.mediaPlaybackRequiresUserGesture);
@@ -346,9 +353,14 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     settings.setDefaultFontSize(customSettings.defaultFontSize);
     settings.setDefaultTextEncodingName(customSettings.defaultTextEncodingName);
     if (customSettings.disabledActionModeMenuItems != null) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.DISABLED_ACTION_MODE_MENU_ITEMS))
-        WebSettingsCompat.setDisabledActionModeMenuItems(settings, customSettings.disabledActionModeMenuItems);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+      if (WebViewFeature.isFeatureSupported(WebViewFeature.DISABLED_ACTION_MODE_MENU_ITEMS)) {
+        try {
+          WebSettingsCompat.setDisabledActionModeMenuItems(settings, customSettings.disabledActionModeMenuItems);
+        } catch (Throwable e) {
+          // best-effort setting: guard against ClassCastException on outdated System WebView builds
+          Log.e(LOG_TAG, "Error calling WebSettingsCompat.setDisabledActionModeMenuItems", e);
+        }
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
         settings.setDisabledActionModeMenuItems(customSettings.disabledActionModeMenuItems);
     }
     settings.setFantasyFontFamily(customSettings.fantasyFontFamily);
@@ -375,9 +387,14 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     settings.setMinimumLogicalFontSize(customSettings.minimumLogicalFontSize);
     setInitialScale(customSettings.initialScale);
     settings.setNeedInitialFocus(customSettings.needInitialFocus);
-    if (WebViewFeature.isFeatureSupported(WebViewFeature.OFF_SCREEN_PRERASTER))
-      WebSettingsCompat.setOffscreenPreRaster(settings, customSettings.offscreenPreRaster);
-    else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.OFF_SCREEN_PRERASTER)) {
+      try {
+        WebSettingsCompat.setOffscreenPreRaster(settings, customSettings.offscreenPreRaster);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setOffscreenPreRaster", e);
+      }
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
       settings.setOffscreenPreRaster(customSettings.offscreenPreRaster);
     settings.setSansSerifFontFamily(customSettings.sansSerifFontFamily);
     settings.setSerifFontFamily(customSettings.serifFontFamily);
@@ -434,14 +451,29 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     }
 
     if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, customSettings.algorithmicDarkeningAllowed);
+      try {
+        WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, customSettings.algorithmicDarkeningAllowed);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setAlgorithmicDarkeningAllowed", e);
+      }
     }
     if (WebViewFeature.isFeatureSupported(WebViewFeature.ENTERPRISE_AUTHENTICATION_APP_LINK_POLICY)) {
-      WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled(settings, customSettings.enterpriseAuthenticationAppLinkPolicyEnabled);
+      try {
+        WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled(settings, customSettings.enterpriseAuthenticationAppLinkPolicyEnabled);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled", e);
+      }
     }
     if (customSettings.requestedWithHeaderOriginAllowList != null &&
             WebViewFeature.isFeatureSupported(WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
-      WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, customSettings.requestedWithHeaderOriginAllowList);
+      try {
+        WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, customSettings.requestedWithHeaderOriginAllowList);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setRequestedWithHeaderOriginAllowList", e);
+      }
     }
 
     contentBlockerHandler.getRuleList().clear();

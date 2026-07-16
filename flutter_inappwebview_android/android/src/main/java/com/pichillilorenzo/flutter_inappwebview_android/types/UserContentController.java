@@ -2,6 +2,7 @@ package com.pichillilorenzo.flutter_inappwebview_android.types;
 
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -184,13 +185,20 @@ public class UserContentController implements Disposable {
         contentWorldsCreatorScript.remove();
       }
       if (!source.isEmpty() && webView != null) {
-        contentWorldsCreatorScript = WebViewCompat.addDocumentStartJavaScript(
-                webView,
-                source,
-                new HashSet<String>() {{
-                  add("*");
-                }}
-        );
+        try {
+          contentWorldsCreatorScript = WebViewCompat.addDocumentStartJavaScript(
+                  webView,
+                  source,
+                  new HashSet<String>() {{
+                    add("*");
+                  }}
+          );
+        } catch (Throwable e) {
+          // WebView Beta channel can throw "Must be started before we block!" RuntimeException
+          // on a startup race. Log and continue with a null ScriptHandler (upstream issue #2849).
+          Log.e(LOG_TAG, "Error calling WebViewCompat.addDocumentStartJavaScript", e);
+          contentWorldsCreatorScript = null;
+        }
       }
     }
   }
@@ -203,11 +211,18 @@ public class UserContentController implements Disposable {
     this.updateContentWorldsCreatorScript();
     if (webView != null && userOnlyScript.getInjectionTime() == UserScriptInjectionTime.AT_DOCUMENT_START
             && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-      ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-              webView,
-              wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), userOnlyScript.getSource()),
-              userOnlyScript.getAllowedOriginRules()
-      );
+      ScriptHandler scriptHandler = null;
+      try {
+        scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), userOnlyScript.getSource()),
+                userOnlyScript.getAllowedOriginRules()
+        );
+      } catch (Throwable e) {
+        // WebView Beta channel can throw "Must be started before we block!" RuntimeException
+        // on a startup race. Log and continue with a null ScriptHandler (upstream issue #2849).
+        Log.e(LOG_TAG, "Error calling WebViewCompat.addDocumentStartJavaScript", e);
+      }
       this.scriptHandlerMap.put(userOnlyScript, scriptHandler);
     }
     return this.userOnlyScripts.get(userOnlyScript.getInjectionTime()).add(userOnlyScript);
@@ -273,11 +288,18 @@ public class UserContentController implements Disposable {
     this.updateContentWorldsCreatorScript();
     if (webView != null && pluginScript.getInjectionTime() == UserScriptInjectionTime.AT_DOCUMENT_START
             && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-      ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-              webView,
-              wrapSourceCodeInContentWorld(pluginScript.getContentWorld(), pluginScript.getSource()),
-              pluginScript.getAllowedOriginRules()
-      );
+      ScriptHandler scriptHandler = null;
+      try {
+        scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                wrapSourceCodeInContentWorld(pluginScript.getContentWorld(), pluginScript.getSource()),
+                pluginScript.getAllowedOriginRules()
+        );
+      } catch (Throwable e) {
+        // WebView Beta channel can throw "Must be started before we block!" RuntimeException
+        // on a startup race. Log and continue with a null ScriptHandler (upstream issue #2849).
+        Log.e(LOG_TAG, "Error calling WebViewCompat.addDocumentStartJavaScript", e);
+      }
       this.scriptHandlerMap.put(pluginScript, scriptHandler);
     }
     return this.pluginScripts.get(pluginScript.getInjectionTime()).add(pluginScript);
