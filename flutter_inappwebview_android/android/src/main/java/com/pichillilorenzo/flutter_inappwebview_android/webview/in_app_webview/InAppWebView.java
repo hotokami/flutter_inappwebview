@@ -366,13 +366,23 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     settings.setFantasyFontFamily(customSettings.fantasyFontFamily);
     settings.setFixedFontFamily(customSettings.fixedFontFamily);
     if (customSettings.forceDark != null) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK))
-        WebSettingsCompat.setForceDark(settings, customSettings.forceDark);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-        settings.setForceDark(customSettings.forceDark);
+      try {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK))
+          WebSettingsCompat.setForceDark(settings, customSettings.forceDark);
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+          settings.setForceDark(customSettings.forceDark);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setForceDark", e);
+      }
     }
     if (customSettings.forceDarkStrategy != null && WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
-      WebSettingsCompat.setForceDarkStrategy(settings, customSettings.forceDarkStrategy);
+      try {
+        WebSettingsCompat.setForceDarkStrategy(settings, customSettings.forceDarkStrategy);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setForceDarkStrategy", e);
+      }
     }
     settings.setGeolocationEnabled(customSettings.geolocationEnabled);
     if (customSettings.layoutAlgorithm != null) {
@@ -849,9 +859,14 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
       settings.setDisplayZoomControls(newCustomSettings.displayZoomControls);
 
     if (newSettingsMap.get("safeBrowsingEnabled") != null && customSettings.safeBrowsingEnabled != newCustomSettings.safeBrowsingEnabled) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE))
-        WebSettingsCompat.setSafeBrowsingEnabled(settings, newCustomSettings.safeBrowsingEnabled);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+      if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)) {
+        try {
+          WebSettingsCompat.setSafeBrowsingEnabled(settings, newCustomSettings.safeBrowsingEnabled);
+        } catch (Throwable e) {
+          // best-effort setting: guard against ClassCastException on outdated System WebView builds
+          Log.e(LOG_TAG, "Error calling WebSettingsCompat.setSafeBrowsingEnabled", e);
+        }
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         settings.setSafeBrowsingEnabled(newCustomSettings.safeBrowsingEnabled);
     }
 
@@ -966,9 +981,14 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     if (newSettingsMap.get("disabledActionModeMenuItems") != null &&
             (customSettings.disabledActionModeMenuItems == null ||
             !customSettings.disabledActionModeMenuItems.equals(newCustomSettings.disabledActionModeMenuItems))) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.DISABLED_ACTION_MODE_MENU_ITEMS))
-        WebSettingsCompat.setDisabledActionModeMenuItems(settings, newCustomSettings.disabledActionModeMenuItems);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+      if (WebViewFeature.isFeatureSupported(WebViewFeature.DISABLED_ACTION_MODE_MENU_ITEMS)) {
+        try {
+          WebSettingsCompat.setDisabledActionModeMenuItems(settings, newCustomSettings.disabledActionModeMenuItems);
+        } catch (Throwable e) {
+          // best-effort setting: guard against ClassCastException on outdated System WebView builds
+          Log.e(LOG_TAG, "Error calling WebSettingsCompat.setDisabledActionModeMenuItems", e);
+        }
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
         settings.setDisabledActionModeMenuItems(newCustomSettings.disabledActionModeMenuItems);
     }
 
@@ -979,16 +999,26 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
       settings.setFixedFontFamily(newCustomSettings.fixedFontFamily);
 
     if (newSettingsMap.get("forceDark") != null && !customSettings.forceDark.equals(newCustomSettings.forceDark)) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK))
-        WebSettingsCompat.setForceDark(settings, newCustomSettings.forceDark);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-        settings.setForceDark(newCustomSettings.forceDark);
+      try {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK))
+          WebSettingsCompat.setForceDark(settings, newCustomSettings.forceDark);
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+          settings.setForceDark(newCustomSettings.forceDark);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setForceDark", e);
+      }
     }
 
     if (newSettingsMap.get("forceDarkStrategy") != null &&
             !customSettings.forceDarkStrategy.equals(newCustomSettings.forceDarkStrategy) &&
             WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
-      WebSettingsCompat.setForceDarkStrategy(settings, newCustomSettings.forceDarkStrategy);
+      try {
+        WebSettingsCompat.setForceDarkStrategy(settings, newCustomSettings.forceDarkStrategy);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setForceDarkStrategy", e);
+      }
     }
 
     if (newSettingsMap.get("geolocationEnabled") != null && customSettings.geolocationEnabled != newCustomSettings.geolocationEnabled)
@@ -1021,9 +1051,14 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
       settings.setNeedInitialFocus(newCustomSettings.needInitialFocus);
 
     if (newSettingsMap.get("offscreenPreRaster") != null && customSettings.offscreenPreRaster != newCustomSettings.offscreenPreRaster) {
-      if (WebViewFeature.isFeatureSupported(WebViewFeature.OFF_SCREEN_PRERASTER))
-        WebSettingsCompat.setOffscreenPreRaster(settings, newCustomSettings.offscreenPreRaster);
-      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+      if (WebViewFeature.isFeatureSupported(WebViewFeature.OFF_SCREEN_PRERASTER)) {
+        try {
+          WebSettingsCompat.setOffscreenPreRaster(settings, newCustomSettings.offscreenPreRaster);
+        } catch (Throwable e) {
+          // best-effort setting: guard against ClassCastException on outdated System WebView builds
+          Log.e(LOG_TAG, "Error calling WebSettingsCompat.setOffscreenPreRaster", e);
+        }
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         settings.setOffscreenPreRaster(newCustomSettings.offscreenPreRaster);
     }
 
@@ -1136,17 +1171,32 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     if (newSettingsMap.get("algorithmicDarkeningAllowed") != null &&
             !Util.objEquals(customSettings.algorithmicDarkeningAllowed, newCustomSettings.algorithmicDarkeningAllowed) &&
             WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, newCustomSettings.algorithmicDarkeningAllowed);
+      try {
+        WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, newCustomSettings.algorithmicDarkeningAllowed);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setAlgorithmicDarkeningAllowed", e);
+      }
     }
     if (newSettingsMap.get("enterpriseAuthenticationAppLinkPolicyEnabled") != null &&
             !Util.objEquals(customSettings.enterpriseAuthenticationAppLinkPolicyEnabled, newCustomSettings.enterpriseAuthenticationAppLinkPolicyEnabled) &&
             WebViewFeature.isFeatureSupported(WebViewFeature.ENTERPRISE_AUTHENTICATION_APP_LINK_POLICY)) {
-      WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled(settings, newCustomSettings.enterpriseAuthenticationAppLinkPolicyEnabled);
+      try {
+        WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled(settings, newCustomSettings.enterpriseAuthenticationAppLinkPolicyEnabled);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setEnterpriseAuthenticationAppLinkPolicyEnabled", e);
+      }
     }
     if (newSettingsMap.get("requestedWithHeaderOriginAllowList") != null &&
             !Util.objEquals(customSettings.requestedWithHeaderOriginAllowList, newCustomSettings.requestedWithHeaderOriginAllowList) &&
             WebViewFeature.isFeatureSupported(WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
-      WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, newCustomSettings.requestedWithHeaderOriginAllowList);
+      try {
+        WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, newCustomSettings.requestedWithHeaderOriginAllowList);
+      } catch (Throwable e) {
+        // best-effort setting: guard against ClassCastException on outdated System WebView builds
+        Log.e(LOG_TAG, "Error calling WebSettingsCompat.setRequestedWithHeaderOriginAllowList", e);
+      }
     }
 
     if (plugin != null) {
