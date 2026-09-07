@@ -39,16 +39,22 @@ public final class CookieFlusher {
     if (!pending.compareAndSet(false, true)) {
       return;
     }
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        pending.set(false);
-        try {
-          CookieManager.getInstance().flush();
-        } catch (Exception e) {
-          Log.e(LOG_TAG, "CookieManager.flush() failed", e);
+    try {
+      executor.execute(new Runnable() {
+        @Override
+        public void run() {
+          // Reset before flush so requests that arrive during flush queue the next one.
+          pending.set(false);
+          try {
+            CookieManager.getInstance().flush();
+          } catch (Throwable t) {
+            Log.e(LOG_TAG, "CookieManager.flush() failed", t);
+          }
         }
-      }
-    });
+      });
+    } catch (Throwable t) {
+      pending.set(false);
+      Log.e(LOG_TAG, "Failed to enqueue cookie flush", t);
+    }
   }
 }
