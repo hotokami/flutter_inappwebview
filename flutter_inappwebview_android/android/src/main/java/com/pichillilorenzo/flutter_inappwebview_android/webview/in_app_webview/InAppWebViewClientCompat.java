@@ -10,7 +10,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.ClientCertRequest;
-import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.HttpAuthHandler;
 import android.webkit.RenderProcessGoneDetail;
@@ -29,6 +28,7 @@ import androidx.webkit.WebResourceRequestCompat;
 import androidx.webkit.WebViewClientCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.pichillilorenzo.flutter_inappwebview_android.CookieFlusher;
 import com.pichillilorenzo.flutter_inappwebview_android.Util;
 import com.pichillilorenzo.flutter_inappwebview_android.credential_database.CredentialDatabase;
 import com.pichillilorenzo.flutter_inappwebview_android.in_app_browser.InAppBrowserDelegate;
@@ -232,7 +232,7 @@ public class InAppWebViewClientCompat extends WebViewClientCompat {
 
     // WebView not storing cookies reliable to local device storage
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      CookieManager.getInstance().flush();
+      CookieFlusher.flushAsync();
     } else {
       CookieSyncManager.getInstance().sync();
     }
