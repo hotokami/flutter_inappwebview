@@ -45,9 +45,12 @@ public class JavaScriptBridgeInterface {
 
   @JavascriptInterface
   public void _callHandler(final String handlerName, final String _callHandlerID, final String args) {
-    if (inAppWebView == null) {
+    if (inAppWebView == null || _callHandlerID == null || !_callHandlerID.matches("[0-9]+")) {
       return;
     }
+    // The raw interface is reachable from child frames: callback IDs are data,
+    // never JavaScript expressions, including the error completion path.
+    final String quotedCallHandlerID = JSONObject.quote(_callHandlerID);
 
     // java.lang.RuntimeException: Methods marked with @UiThread must be executed on the main thread.
     // https://github.com/pichillilorenzo/flutter_inappwebview/issues/98
@@ -128,9 +131,9 @@ public class JavaScriptBridgeInterface {
                 // The webview has already been disposed, ignore.
                 return;
               }
-              String sourceCode = "if (window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "] != null) { " +
-                "window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "].resolve(" + json + "); " +
-                "delete window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "]; " +
+              String sourceCode = "if (window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "] != null) { " +
+                "window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "].resolve(" + json + "); " +
+                "delete window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "]; " +
               "}";
               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 inAppWebView.evaluateJavascript(sourceCode, (ValueCallback<String>) null);
@@ -150,9 +153,9 @@ public class JavaScriptBridgeInterface {
                 return;
               }
 
-              String sourceCode = "if (window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "] != null) { " +
-                      "window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "].reject(new Error(" + JSONObject.quote(message) + ")); " +
-                      "delete window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + _callHandlerID + "]; " +
+              String sourceCode = "if (window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "] != null) { " +
+                      "window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "].reject(new Error(" + JSONObject.quote(message) + ")); " +
+                      "delete window." + JavaScriptBridgeJS.JAVASCRIPT_BRIDGE_NAME + "[" + quotedCallHandlerID + "]; " +
                       "}";
               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 inAppWebView.evaluateJavascript(sourceCode, (ValueCallback<String>) null);
